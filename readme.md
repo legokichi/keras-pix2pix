@@ -1,6 +1,8 @@
-# keras-pix2pix
+# ~~keras-pix2pix~~ keras-u-net
 
 working in progress
+
+ImageGAN only.
 
 ## ref
 
@@ -9,7 +11,7 @@ working in progress
 * https://github.com/costapt/vess2ret
 * https://github.com/makora9143/pix2pix-keras-tensorflow
 * https://github.com/tdeboissiere/DeepLearningImplementations/tree/master/pix2pix
-
+* https://github.com/jocicmarko/ultrasound-nerve-segmentation/
 
 ## install
 
@@ -28,7 +30,7 @@ pip install pydot_ng
 ## type check
 
 ```
-mypy --ignore-missing-imports unet.py 
+mypy --ignore-missing-imports train.py 
 ```
 
 working in progress
@@ -37,4 +39,4 @@ working in progress
 
 ![segnet](https://raw.githubusercontent.com/legokichi/keras-pix2pix/master/unet.png)
 
-
+![segnet](https://raw.githubusercontent.com/legokichi/keras-pix2pix/master/disc.png)
