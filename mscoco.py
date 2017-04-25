@@ -35,6 +35,7 @@ class CamVid(DatasetMixin):
         info = self.infos[i]
         img, mask = load_img(self.coco, self.path, info)
         if self.seq != None:
+            # image data augumantation
             img = np.expand_dims(img, axis=0)
             mask = np.expand_dims(mask, axis=0)
             img = self.seq.augment_images(img)
@@ -45,24 +46,26 @@ class CamVid(DatasetMixin):
         if self.resize_shape != None:
             img = cv2.resize(img, self.resize_shape)
             mask = cv2.resize(mask, self.resize_shape)
-        mask[:,:,0] = mask[:,:,0]>0
+        mask = mask > 0
         return (img, mask)
 
 def load_img(coco: COCO, path: str, imgInfo: dict) -> Tuple[np.ndarray, np.ndarray]:
-    img = io.imread(path +imgInfo['file_name'])
+    img = io.imread(imgInfo['coco_url'])
+    #img = io.imread(path + imgInfo['file_name'])
     if img.ndim != 3:
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
 
     anns = coco.loadAnns(coco.getAnnIds(imgIds=[imgInfo['id']],iscrowd=False)) # type: List[dict]
-    mask_all = np.zeros((img.shape[0], img.shape[1], 2), np.uint8)
+    mask_human = np.zeros((img.shape[0], img.shape[1]), np.uint8)
+    # mask_human: probability image mask
     for ann in anns:
         cat = coco.loadCats([ann["category_id"]])[0]
         if cat["name" ] != "person": continue
         rles = mask.frPyObjects(ann["segmentation"], img.shape[0], img.shape[1]) # type: List[dict]
         for i, rle in enumerate(rles):
             mask_img = mask.decode(rle) # type: np.ndarray
-            mask_all[:,:,0] += mask_img
-    return (img, mask_all)
+            mask_human += mask_img
+    return (img, mask_human)
 
 
 
@@ -80,7 +83,7 @@ def get_iter(resize_shape: Tuple[int, int]=None) -> DatasetMixin:
                 shear=(-16, 16), # shear by -16 to +16 degrees
                 #order=iaa.ALL, # use any of scikit-image's interpolation methods
                 #cval=(0, 255), # if mode is constant, use a cval between 0 and 255
-                mode="wrap" # use any of scikit-image's warping modes (see 2nd image from the top for examples)
+                #mode="wrap" # use any of scikit-image's warping modes (see 2nd image from the top for examples)
         ),
     ]).to_deterministic() # type: iaa.Sequential
 

@@ -37,8 +37,8 @@ def create_unet(in_shape: Tuple[int,int,int], output_ch: int, filters: int, ker_
     x = BatchNormalization()( Conv2DTranspose(filters*1, kernel_size=(4, 4), strides=(2, 2), padding="same", kernel_initializer=ker_init)( Activation("relu")(x) ) ); x = Concatenate(axis=3)([x, e1])
     x =                       Conv2DTranspose(output_ch, kernel_size=(4, 4), strides=(2, 2), padding="same", kernel_initializer=ker_init)( Activation("relu")(x) )
     
-    x = Activation("tanh")(x)
-    #x = Activation('sigmoid')(x)
+    #x = Activation("tanh")(x)
+    x = Activation('sigmoid')(x)
     
     unet = Model(inputs=[input_tensor], outputs=[x])
     

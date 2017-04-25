@@ -112,7 +112,7 @@ if __name__ == '__main__':
 
         
         loss = dice_coef_loss
-        metrics = ['dice_coef']
+        metrics = [dice_coef]
 
         model.compile(
             optimizer=optimizer,
