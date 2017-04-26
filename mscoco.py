@@ -20,7 +20,7 @@ from pycocotools import mask
 
 
 class CamVid(DatasetMixin):
-    def __init__(self, coco: COCO, path: str, seq: iaa.Sequential=None, resize_shape: Tuple[int, int]=None):
+    def __init__(self, coco: COCO, path: str, seq: iaa.Sequential, resize_shape: Tuple[int, int]=None, dice_coef: bool=False):
         self.resize_shape = resize_shape
         self.coco = coco
         self.infos = coco.loadImgs(coco.getImgIds(catIds=coco.getCatIds(catNms=['person']))) # type: List[dict]
@@ -28,12 +28,13 @@ class CamVid(DatasetMixin):
         self.seq_norm = iaa.Sequential([
             iaa.ContrastNormalization((0.5, 2.0), per_channel=0.5)
         ]) # type: iaa.Sequential
+        self.dice_coef = dice_coef
         self.path = path
     def __len__(self) -> int:
         return len(self.infos)
     def get_example(self, i) -> Tuple[np.ndarray, np.ndarray]:
         info = self.infos[i]
-        img, mask = load_img(self.coco, self.path, info)
+        img, mask = self.load_img(info)
         if self.seq != None:
             # image data augumantation
             img = np.expand_dims(img, axis=0)
@@ -46,33 +47,40 @@ class CamVid(DatasetMixin):
         if self.resize_shape != None:
             img = cv2.resize(img, self.resize_shape)
             mask = cv2.resize(mask, self.resize_shape)
-        mask = mask > 0
+        if self.dice_coef:
+            mask = mask > 0
+        else:
+            mask[:,:,0] = mask[:,:,0] > 0
         return (img, mask)
+    def load_img(self, imgInfo: dict) -> Tuple[np.ndarray, np.ndarray]:
+        #img = io.imread(imgInfo['coco_url'])
+        img = io.imread(self.path + imgInfo['file_name'])
+        if img.ndim != 3:
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+        anns = self.coco.loadAnns(self.coco.getAnnIds(imgIds=[imgInfo['id']],iscrowd=False)) # type: List[dict]
+        if self.dice_coef:
+            mask_human = np.zeros((img.shape[0], img.shape[1]), np.uint8)
+        else:
+            mask_human = np.zeros((img.shape[0], img.shape[1], 2), np.uint8)
+        # mask_human: probability image mask
+        for ann in anns:
+            cat = self.coco.loadCats([ann["category_id"]])[0]
+            if cat["name" ] != "person": continue
+            rles = mask.frPyObjects(ann["segmentation"], img.shape[0], img.shape[1]) # type: List[dict]
+            for i, rle in enumerate(rles):
+                mask_img = mask.decode(rle) # type: np.ndarraya
+                if self.dice_coef:
+                    mask_human += mask_img
+                else:
+                    mask_human[:,:,0] += mask_img
+        return (img, mask_human)
 
-def load_img(coco: COCO, path: str, imgInfo: dict) -> Tuple[np.ndarray, np.ndarray]:
-    img = io.imread(imgInfo['coco_url'])
-    #img = io.imread(path + imgInfo['file_name'])
-    if img.ndim != 3:
-        img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-
-    anns = coco.loadAnns(coco.getAnnIds(imgIds=[imgInfo['id']],iscrowd=False)) # type: List[dict]
-    mask_human = np.zeros((img.shape[0], img.shape[1]), np.uint8)
-    # mask_human: probability image mask
-    for ann in anns:
-        cat = coco.loadCats([ann["category_id"]])[0]
-        if cat["name" ] != "person": continue
-        rles = mask.frPyObjects(ann["segmentation"], img.shape[0], img.shape[1]) # type: List[dict]
-        for i, rle in enumerate(rles):
-            mask_img = mask.decode(rle) # type: np.ndarray
-            mask_human += mask_img
-    return (img, mask_human)
 
 
+def get_iter(resize_shape: Tuple[int, int]=None, dice_coef: bool = False, workdir="./") -> DatasetMixin:
 
-def get_iter(resize_shape: Tuple[int, int]=None) -> DatasetMixin:
-
-    coco_train = COCO("./annotations/instances_train2014.json") # type: COCO
-    coco_val = COCO("./annotations/instances_val2014.json") # type: COCO
+    coco_train = COCO(workdir+"annotations/instances_train2014.json") # type: COCO
+    coco_val = COCO(workdir+"annotations/instances_val2014.json") # type: COCO
 
     seq = iaa.Sequential([
         iaa.Fliplr(0.5),
@@ -87,4 +95,7 @@ def get_iter(resize_shape: Tuple[int, int]=None) -> DatasetMixin:
         ),
     ]).to_deterministic() # type: iaa.Sequential
 
-    return CamVid(coco_train, "train2014/", seq, resize_shape), CamVid(coco_val, "val2014/", resize_shape)
+    return (
+        CamVid(coco_train, workdir+"train2014/", seq, resize_shape, dice_coef),
+        CamVid(coco_val, workdir+"val2014/", seq, resize_shape, dice_coef)
+    )

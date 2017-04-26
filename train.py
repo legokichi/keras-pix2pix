@@ -56,20 +56,24 @@ if __name__ == '__main__':
     parser.add_argument("--lr", action='store', type=float, default=0.001, help='learning late')
     parser.add_argument("--optimizer", action='store', type=str, default="adam", help='adam|nesterov')
     parser.add_argument("--filters", action='store', type=int, default=64, help='32|64|128')
-    
+    parser.add_argument("--dice_coef", action='store_true', help='use dice_coef for loss function')
+    parser.add_argument("--dir", action='store', type=str, default="./", help='mscoco dir')
     args = parser.parse_args()
 
-    name = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    name = args.dir
+    name += datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     name += "_fil" + str(args.filters)
     name += "_" + args.optimizer
     name += "_lr" + str(args.lr)
     name += "_" + args.ker_init
+    if args.dice_coef: name += "_dice_coef"
+    else: name += "_crossentropy"
 
     print("name: ", name)
 
     resize_shape = (512, 512)
     
-    train, valid = get_coco(resize_shape) # type: Tuple[Iterator[np.ndarray], Iterator[np.ndarray]]
+    train, valid = get_coco(resize_shape, args.dice_coef, args.dir) # type: Tuple[Iterator[np.ndarray], Iterator[np.ndarray]]
 
     train_iter = convert_to_keras_batch(
         #SerialIterator(
@@ -103,7 +107,16 @@ if __name__ == '__main__':
         tensorflow_backend.set_learning_phase(1)
 
         input_shape = (resize_shape[0], resize_shape[1], 3)
-        model = create_unet(input_shape, 1, args.filters, args.ker_init)
+        if args.dice_coef:
+            output_ch = 1
+            loss = dice_coef_loss
+            metrics = [dice_coef]
+        else:
+            output_ch = 2
+            loss = "categorical_crossentropy"
+            metrics = ['accuracy']
+
+        model = create_unet(input_shape, output_ch, args.filters, args.ker_init)
         
         if args.optimizer == "nesterov":
             optimizer = SGD(lr=args.lr, momentum=0.9, decay=0.0005, nesterov=True)
@@ -111,9 +124,6 @@ if __name__ == '__main__':
             optimizer = Adam(lr=args.lr, beta_1=0.5, beta_2=0.999, epsilon=1e-08, decay=0.0)
 
         
-        loss = dice_coef_loss
-        metrics = [dice_coef]
-
         model.compile(
             optimizer=optimizer,
             loss=loss,
