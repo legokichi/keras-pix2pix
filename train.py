@@ -121,7 +121,7 @@ if __name__ == '__main__':
         if args.optimizer == "nesterov":
             optimizer = SGD(lr=args.lr, momentum=0.9, decay=0.0005, nesterov=True)
         else:
-            optimizer = Adam(lr=args.lr, beta_1=0.5, beta_2=0.999, epsilon=1e-08, decay=0.0)
+            optimizer = Adam(lr=args.lr)#, beta_1=0.5, beta_2=0.999, epsilon=1e-08, decay=0.0)
 
         
         model.compile(
@@ -138,9 +138,9 @@ if __name__ == '__main__':
         callbacks = [] # type: List[Callback]
 
         callbacks.append(ModelCheckpoint(
-            name+"_weights.epoch{epoch:04d}-val_loss{val_loss:.2f}.hdf5",
+            name+"_weights.epoch{epoch:04d}-val_loss{val_loss:.2f}-val_acc{val_acc:.2f}.hdf5",
             verbose=1,
-            save_best_only=True,
+            save_best_only=False,
             save_weights_only=True,
             period=1,
         ))
@@ -159,7 +159,7 @@ if __name__ == '__main__':
             verbose=1,
             callbacks=callbacks,
             validation_data=valid_iter,
-            validation_steps=2,
+            validation_steps=30,
             initial_epoch=args.initial_epoch,
         )
 

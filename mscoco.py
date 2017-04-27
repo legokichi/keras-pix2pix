@@ -77,23 +77,27 @@ class CamVid(DatasetMixin):
 
 
 
-def get_iter(resize_shape: Tuple[int, int]=None, dice_coef: bool = False, workdir="./") -> DatasetMixin:
+def get_iter(resize_shape: Tuple[int, int]=None, dice_coef: bool =False, workdir="./", data_aug: bool=False) -> DatasetMixin:
 
     coco_train = COCO(workdir+"annotations/instances_train2014.json") # type: COCO
     coco_val = COCO(workdir+"annotations/instances_val2014.json") # type: COCO
 
-    seq = iaa.Sequential([
-        iaa.Fliplr(0.5),
-        iaa.Affine(
-                scale={"x": (0.8, 1.2), "y": (0.8, 1.2)}, # scale images to 80-120% of their size, individually per axis
-                translate_px={"x": (-16, 16), "y": (-16, 16)}, # translate by -16 to +16 pixels (per axis)
-                rotate=(-45, 45), # rotate by -45 to +45 degrees
-                shear=(-16, 16), # shear by -16 to +16 degrees
-                #order=iaa.ALL, # use any of scikit-image's interpolation methods
-                #cval=(0, 255), # if mode is constant, use a cval between 0 and 255
-                #mode="wrap" # use any of scikit-image's warping modes (see 2nd image from the top for examples)
-        ),
-    ]).to_deterministic() # type: iaa.Sequential
+    if data_aug:
+        seq = iaa.Sequential([
+            iaa.Fliplr(0.5),
+            iaa.Affine(
+                    scale={"x": (0.8, 1.2), "y": (0.8, 1.2)}, # scale images to 80-120% of their size, individually per axis
+                    translate_px={"x": (-16, 16), "y": (-16, 16)}, # translate by -16 to +16 pixels (per axis)
+                    rotate=(-45, 45), # rotate by -45 to +45 degrees
+                    shear=(-16, 16), # shear by -16 to +16 degrees
+                    #order=iaa.ALL, # use any of scikit-image's interpolation methods
+                    #cval=(0, 255), # if mode is constant, use a cval between 0 and 255
+                    #mode="wrap" # use any of scikit-image's warping modes (see 2nd image from the top for examples)
+            ),
+        ]).to_deterministic() # type: iaa.Sequential
+    else:
+        seq = iaa.Sequential([]).to_deterministic()
+
 
     return (
         CamVid(coco_train, workdir+"train2014/", seq, resize_shape, dice_coef),
