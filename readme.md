@@ -38,7 +38,7 @@ mypy --ignore-missing-imports train.py
 
 
 ```python
-env CUDA_VISIBLE_DEVICES=0 python train.py --lr=0.0001 --dice_coef --dir=/data/yosuke/
+env CUDA_VISIBLE_DEVICES=0 python train.py --lr=0.0001 --dice_coef
 ```
 
 ## model
