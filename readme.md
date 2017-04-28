@@ -29,7 +29,7 @@ pip install pydot_ng
 
 ## type check
 
-```python
+```
 mypy --ignore-missing-imports train.py 
 ```
 
@@ -37,8 +37,9 @@ mypy --ignore-missing-imports train.py
 ## train
 
 
-```python
+```
 env CUDA_VISIBLE_DEVICES=0 python train.py --lr=0.0001 --dice_coef
+env CUDA_VISIBLE_DEVICES=1 python train.py --lr=0.0001 --dice_coef --data_aug
 ```
 
 ## model

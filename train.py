@@ -58,6 +58,7 @@ if __name__ == '__main__':
     parser.add_argument("--filters", action='store', type=int, default=64, help='32|64|128')
     parser.add_argument("--dice_coef", action='store_true', help='use dice_coef for loss function')
     parser.add_argument("--dir", action='store', type=str, default="./", help='mscoco dir')
+    parser.add_argument("--data_aug", action='store_true', help='use data augmentation')
     args = parser.parse_args()
 
     name = args.dir
@@ -73,7 +74,7 @@ if __name__ == '__main__':
 
     resize_shape = (512, 512)
     
-    train, valid = get_coco(resize_shape, args.dice_coef, args.dir) # type: Tuple[Iterator[np.ndarray], Iterator[np.ndarray]]
+    train, valid = get_coco(resize_shape, args.dice_coef, args.dir, data_aug=args.data_aug) # type: Tuple[Iterator[np.ndarray], Iterator[np.ndarray]]
 
     train_iter = convert_to_keras_batch(
         #SerialIterator(
