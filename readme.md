@@ -29,14 +29,20 @@ pip install pydot_ng
 
 ## type check
 
-```
+```python
 mypy --ignore-missing-imports train.py 
 ```
 
-working in progress
+
+## train
+
+
+```python
+env CUDA_VISIBLE_DEVICES=0 python train.py --lr=0.0001 --dice_coef --dir=/data/yosuke/
+```
 
 ## model
 
-![segnet](https://raw.githubusercontent.com/legokichi/keras-pix2pix/master/unet.png)
+![unet](https://raw.githubusercontent.com/legokichi/keras-pix2pix/master/unet.png)
 
-![segnet](https://raw.githubusercontent.com/legokichi/keras-pix2pix/master/disc.png)
+![disc](https://raw.githubusercontent.com/legokichi/keras-pix2pix/master/disc.png)

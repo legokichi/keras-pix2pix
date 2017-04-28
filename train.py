@@ -111,10 +111,12 @@ if __name__ == '__main__':
             output_ch = 1
             loss = dice_coef_loss
             metrics = [dice_coef]
+            filename = "_weights.epoch{epoch:04d}-val_loss{val_loss:.2f}-val_dice_coef{val_dice_coef:.2f}.hdf5"
         else:
             output_ch = 2
             loss = "categorical_crossentropy"
             metrics = ['accuracy']
+            filename = "_weights.epoch{epoch:04d}-val_loss{val_loss:.2f}-val_acc{val_acc:.2f}.hdf5"
 
         model = create_unet(input_shape, output_ch, args.filters, args.ker_init)
         
@@ -138,7 +140,7 @@ if __name__ == '__main__':
         callbacks = [] # type: List[Callback]
 
         callbacks.append(ModelCheckpoint(
-            name+"_weights.epoch{epoch:04d}-val_loss{val_loss:.2f}-val_acc{val_acc:.2f}.hdf5",
+            name+filename,
             verbose=1,
             save_best_only=False,
             save_weights_only=True,
@@ -154,7 +156,7 @@ if __name__ == '__main__':
 
         hist = model.fit_generator(
             generator=train_iter,
-            steps_per_epoch=len(cast(Sized, train)),
+            steps_per_epoch=int(len(cast(Sized, train))/8),
             epochs=args.epochs,
             verbose=1,
             callbacks=callbacks,
