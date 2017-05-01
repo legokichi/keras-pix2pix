@@ -47,3 +47,27 @@ env CUDA_VISIBLE_DEVICES=1 python train.py --lr=0.0001 --dice_coef --data_aug
 ![unet](https://raw.githubusercontent.com/legokichi/keras-pix2pix/master/unet.png)
 
 ![disc](https://raw.githubusercontent.com/legokichi/keras-pix2pix/master/disc.png)
+
+
+# U-net Web Server
+
+## setup
+
+```
+pip install gunicorn flask
+```
+
+### on gnicorn
+
+```
+gunicorn -w 4  -b 0.0.0.0:8888  server:app
+```
+
+### on flask
+
+```
+env FLASK_APP=server.py flask run --host=0.0.0.0 --port 8888
+```
+
+
+

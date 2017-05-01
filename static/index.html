@@ -1,0 +1,49 @@
+<!doctype html>
+<title>Upload new File</title>
+<h1>Upload new File</h1>
+<form method="post" enctype="multipart/form-data" action="./post">
+    <input type="file" name="files" id="files" multiple="multiple" />
+    <!--input type="submit" value="submit" /-->
+</form>
+<script>
+document.getElementById('files').addEventListener('change', (ev)=>{
+  const files = Array.from(ev.target.files);
+  Promise.all([
+    detect(files).then((blob)=> fetchImage(URL.createObjectURL(blob)) ),
+    Promise.all(files.map((file)=> fetchImage(URL.createObjectURL(file)) ) ),
+  ]).then(([retImg, imgs])=>{
+    console.log(retImg, imgs);
+    img = img[0];
+    document.body.appendChild(img);
+    document.body.appendChild(retImg);
+    URL.revokeObjectURL(img.src)
+    URL.revokeObjectURL(retImg.src)
+  });
+});
+
+function fetchImage(url) {
+  return new Promise((resolve, reject)=>{
+    var img = new Image();
+    img.src = url;
+    img.onload = ()=> resolve(img);
+    img.onerror = reject;
+  });
+}
+
+function detect(blobs){
+  return new Promise((resolve, reject)=>{
+    const formData = new FormData();
+    blobs.forEach((blob, i)=>{
+      formData.append("files", blob);
+    });
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "./post");
+    xhr.responseType = "blob";
+    xhr.onload = ()=>{
+        if(xhr.status === 200){ resolve(xhr.response); }
+        else{ reject(xhr) }
+    };
+    xhr.send(formData);
+  });
+}
+</script>
