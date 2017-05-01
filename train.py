@@ -69,6 +69,7 @@ if __name__ == '__main__':
     name += "_" + args.ker_init
     if args.dice_coef: name += "_dice_coef"
     else: name += "_crossentropy"
+    if args.data_aug: name += "_data_aug"
 
     print("name: ", name)
 
@@ -107,6 +108,8 @@ if __name__ == '__main__':
         tensorflow_backend.set_session(session)
         tensorflow_backend.set_learning_phase(1)
 
+        loss = "" # type: Union[Callable, str]
+        metrics = [] # type: List[Union[Callable, str]]
         input_shape = (resize_shape[0], resize_shape[1], 3)
         if args.dice_coef:
             output_ch = 1
