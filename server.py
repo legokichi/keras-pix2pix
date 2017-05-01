@@ -14,8 +14,9 @@ folder = "/data/yosuke/"
 
 app = Flask(__name__, static_url_path='')
 
-model = create_unet((512, 512, 3), 1, 64)
-model.load_weights(folder+"2017-04-28-11-11-28_fil64_adam_lr0.0001_glorot_uniform_dice_coef_weights.epoch0075-val_loss-0.79-val_dice_coef0.79.hdf5")
+with K.tf.device('/cpu:0'):
+    model = create_unet((512, 512, 3), 1, 64)
+    model.load_weights(folder+"2017-04-28-11-11-28_fil64_adam_lr0.0001_glorot_uniform_dice_coef_weights.epoch0075-val_loss-0.79-val_dice_coef0.79.hdf5")
 
 @app.route('/')
 def root():
@@ -54,7 +55,7 @@ def upload_file():
     io.imsave(filename, output[0])
     
     elapsed = time.time() - start
-    print(elapsed, "sec, ", ret)
+    print(elapsed, "sec, ", filename)
 
     res = send_file(filename, mimetype='image/png')
 

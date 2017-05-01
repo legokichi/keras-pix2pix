@@ -13,7 +13,7 @@ document.getElementById('files').addEventListener('change', (ev)=>{
     Promise.all(files.map((file)=> fetchImage(URL.createObjectURL(file)) ) ),
   ]).then(([retImg, imgs])=>{
     console.log(retImg, imgs);
-    img = img[0];
+    img = imgs[0];
     document.body.appendChild(img);
     document.body.appendChild(retImg);
     URL.revokeObjectURL(img.src)
