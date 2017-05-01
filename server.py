@@ -8,6 +8,7 @@ from flask import Flask, request, json, send_file
 import keras.backend as  K
 from keras.models import model_from_json
 import skimage.io as io
+import skimage.color as color
 from model_unet import create_unet
 
 folder = "/data/yosuke/"
@@ -47,12 +48,20 @@ def upload_file():
 
     img = io.imread(filename)
     img = cv2.resize(img, (512, 512))
+    if img.shape[2] == 4:
+        print("drop alpha channel")
+        img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
     img = np.expand_dims(img, axis=0)
 
     with K.tf.device('/cpu:0'):
         output = model.predict(img)
+        _img = output[0]
     filename += ".png"
-    io.imsave(filename, output[0])
+    print(_img.dtype)
+
+    _img = color.gray2rgb(_img*2-1)
+    #_img = cv2.applyColorMap(_img*255, cv2.COLORMAP_JET)
+    io.imsave(filename, _img)
     
     elapsed = time.time() - start
     print(elapsed, "sec, ", filename)
