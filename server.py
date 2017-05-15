@@ -11,7 +11,7 @@ import skimage.io as io
 import skimage.color as color
 from model_unet import create_unet
 
-folder = "/data/yosuke/"
+folder = "/data/"
 
 app = Flask(__name__, static_url_path='')
 
